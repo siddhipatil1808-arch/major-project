@@ -1,12 +1,26 @@
 import { useEffect, useState } from "react";
 import Navbar from "../components/Navbar";
 import { supabase } from "../services/supabase";
+
 import {
   Package,
   CheckCircle,
   AlertTriangle,
   XCircle,
 } from "lucide-react";
+
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+  Legend,
+} from "recharts";
 
 function Dashboard() {
   const [stats, setStats] = useState({
@@ -26,6 +40,8 @@ function Dashboard() {
     const {
       data: { user },
     } = await supabase.auth.getUser();
+
+    if (!user) return;
 
     const { data, error } = await supabase
       .from("food_items")
@@ -94,50 +110,101 @@ function Dashboard() {
     );
   }
 
+  const chartData = [
+    { name: "Fresh", value: stats.fresh },
+    { name: "Expiring", value: stats.expiring },
+    { name: "Expired", value: stats.expired },
+  ];
+
+  const COLORS = ["#22c55e", "#facc15", "#ef4444"];
+
   return (
     <>
       <Navbar />
 
-      <div className="p-8">
+      <div className="p-8 bg-gray-100 min-h-screen">
 
         <h1 className="text-4xl font-bold text-green-700 mb-8">
           Dashboard
         </h1>
 
-        {/* Statistics */}
+        {/* Statistics Cards */}
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
 
           <div className="bg-blue-500 text-white rounded-xl p-6 shadow-lg">
             <Package size={40} />
-            <h3 className="mt-4">Total Items</h3>
-            <h1 className="text-4xl font-bold">
-              {stats.total}
-            </h1>
+            <h3 className="mt-4 text-lg">Total Items</h3>
+            <h1 className="text-4xl font-bold">{stats.total}</h1>
           </div>
 
           <div className="bg-green-500 text-white rounded-xl p-6 shadow-lg">
             <CheckCircle size={40} />
-            <h3 className="mt-4">Fresh</h3>
-            <h1 className="text-4xl font-bold">
-              {stats.fresh}
-            </h1>
+            <h3 className="mt-4 text-lg">Fresh</h3>
+            <h1 className="text-4xl font-bold">{stats.fresh}</h1>
           </div>
 
           <div className="bg-yellow-500 text-white rounded-xl p-6 shadow-lg">
             <AlertTriangle size={40} />
-            <h3 className="mt-4">Expiring</h3>
-            <h1 className="text-4xl font-bold">
-              {stats.expiring}
-            </h1>
+            <h3 className="mt-4 text-lg">Expiring</h3>
+            <h1 className="text-4xl font-bold">{stats.expiring}</h1>
           </div>
 
           <div className="bg-red-500 text-white rounded-xl p-6 shadow-lg">
             <XCircle size={40} />
-            <h3 className="mt-4">Expired</h3>
-            <h1 className="text-4xl font-bold">
-              {stats.expired}
-            </h1>
+            <h3 className="mt-4 text-lg">Expired</h3>
+            <h1 className="text-4xl font-bold">{stats.expired}</h1>
+          </div>
+
+        </div>
+
+        {/* Analytics */}
+
+        <div className="grid lg:grid-cols-2 gap-8 mb-10">
+
+          <div className="bg-white rounded-xl shadow-lg p-6">
+            <h2 className="text-2xl font-bold mb-5">
+              Pantry Analytics
+            </h2>
+
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={chartData}>
+                <XAxis dataKey="name" />
+                <YAxis />
+                <Tooltip />
+                <Bar dataKey="value" fill="#16a34a" />
+              </BarChart>
+            </ResponsiveContainer>
+
+          </div>
+
+          <div className="bg-white rounded-xl shadow-lg p-6">
+            <h2 className="text-2xl font-bold mb-5">
+              Food Distribution
+            </h2>
+
+            <ResponsiveContainer width="100%" height={300}>
+              <PieChart>
+
+                <Pie
+                  data={chartData}
+                  dataKey="value"
+                  outerRadius={100}
+                  label
+                >
+                  {chartData.map((entry, index) => (
+                    <Cell
+                      key={index}
+                      fill={COLORS[index]}
+                    />
+                  ))}
+                </Pie>
+
+                <Legend />
+
+              </PieChart>
+            </ResponsiveContainer>
+
           </div>
 
         </div>
@@ -151,29 +218,21 @@ function Dashboard() {
           </h2>
 
           {recentFoods.length === 0 ? (
-            <p>No food items found.</p>
+            <p className="text-gray-500">
+              No food items available.
+            </p>
           ) : (
+
             <table className="w-full">
 
               <thead>
 
                 <tr className="border-b">
 
-                  <th className="text-left py-3">
-                    Food
-                  </th>
-
-                  <th className="text-left">
-                    Category
-                  </th>
-
-                  <th className="text-left">
-                    Quantity
-                  </th>
-
-                  <th className="text-left">
-                    Status
-                  </th>
+                  <th className="text-left py-3">Food</th>
+                  <th className="text-left">Category</th>
+                  <th className="text-left">Quantity</th>
+                  <th className="text-left">Status</th>
 
                 </tr>
 
@@ -185,7 +244,7 @@ function Dashboard() {
 
                   <tr
                     key={food.id}
-                    className="border-b"
+                    className="border-b hover:bg-gray-50"
                   >
 
                     <td className="py-4">
@@ -211,6 +270,7 @@ function Dashboard() {
               </tbody>
 
             </table>
+
           )}
 
         </div>
